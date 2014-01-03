@@ -20,12 +20,14 @@ rump:
 %.o:		${SRCDIR}/%.c rump
 		${CC} $< ${CFLAGS} -o $@
 
-${DOTA}:	${OBJECTS}
+${DOTA}:	${OBJECTS} rump
 		${AR} rcs ${DOTA} ${OBJECTS}
 
 ${TARGET}:	${DOTA}
 		${CC} -Wl,-x -shared -Wl,-soname,${SONAME} -Wl,--warn-shared-textrel -o ${TARGET} -Wl,--whole-archive ${DOTA} -Wl,--no-whole-archive ${SOLIBS}
 
 clean:		
-		rm -rf ${OBJECTS} ${DOTA} ${TARGET} rump *~
+		rm -rf ${OBJECTS} ${DOTA} ${TARGET} *~
 
+cleanrump:	
+		rm -rf rump
