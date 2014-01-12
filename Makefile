@@ -4,10 +4,13 @@ CFLAGS=${INCLUDE} -O2 -g -fPIC -std=gnu99 ${WARN} -DLIBRUMPUSER -D_REENTRANT  -c
 SRCDIR=./librumpfiber
 SOURCES=rumpuser_bio.c rumpuser_component.c rumpuser_dl.c rumpuser_pth.c rumpuser.c rumpuser_daemonize.c rumpuser_errtrans.c
 OBJECTS=$(SOURCES:.c=.o)
+PICOBJECTS=$(SOURCES:.c=.pico)
 DOTA=librumpuser.a
+PICA=librumpuser_pic.a
 SOLIBS=-lrt -ldl
 SONAME=librumpuser.so.0
-TARGET=librumpuser.so.0.1
+SHLIB=librumpuser.so.0.1
+TARGET=${SHLIB} ${DOTA}
 BUILDRUMP=buildrump.sh/buildrump.sh
 RUMPLIBS=rump/lib/librump.so
 
@@ -24,14 +27,20 @@ ${RUMPLIBS}:	buildrump.sh
 %.o:		${SRCDIR}/%.c ${RUMPLIBS}
 		${CC} $< ${CFLAGS} -o $@
 
-${DOTA}:	${OBJECTS} ${RUMPLIBS}
-		${AR} rcs ${DOTA} ${OBJECTS}
+%.pico:		${SRCDIR}/%.c ${RUMPLIBS}
+		${CC} $< ${CFLAGS} -fPIC -o $@
 
-${TARGET}:	${DOTA}
-		${CC} -Wl,-x -shared -Wl,-soname,${SONAME} -Wl,--warn-shared-textrel -o ${TARGET} -Wl,--whole-archive ${DOTA} -Wl,--no-whole-archive ${SOLIBS}
+${DOTA}:	${OBJECTS} ${RUMPLIBS}
+		${AR} rcs $@ $<
+
+${PICA}:	${PICOBJECTS} ${RUMPLIBS}
+		${AR} rcs $@ $<
+
+${SHLIB}:	${PICA}
+		${CC} -Wl,-x -shared -Wl,-soname,${SONAME} -Wl,--warn-shared-textrel -o ${SHLIB} -Wl,--whole-archive ${PICA} -Wl,--no-whole-archive ${SOLIBS}
 
 clean:		
-		rm -rf ${OBJECTS} ${DOTA} ${TARGET} *~
+		rm -rf ${OBJECTS} ${PICOBJECTS} ${PICA} ${TARGET} *~
 
 cleanrump:	
 		rm -rf rump
