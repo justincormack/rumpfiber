@@ -3,8 +3,8 @@ WARN=-Wall -Wstrict-prototypes -Wmissing-prototypes -Wpointer-arith -Wno-sign-co
 CFLAGS=${INCLUDE} -O2 -g -fPIC -std=gnu99 ${WARN} -DLIBRUMPUSER -D_REENTRANT  -c -DGPROF -DPROF
 SRCDIR=./librumpfiber
 SOURCES=rumpuser_bio.c rumpuser_component.c rumpuser_dl.c rumpuser_pth.c rumpuser.c rumpuser_daemonize.c rumpuser_errtrans.c
-OBJECTS=$(SOURCES:.c=.o)
-PICOBJECTS=$(SOURCES:.c=.pico)
+OBJECTS=$(SOURCES:%.c=obj/%.o)
+PICOBJECTS=$(SOURCES:%.c=obj/%.pico)
 DOTA=librumpuser.a
 PICA=librumpuser_pic.a
 SOLIBS=-lrt -ldl
@@ -18,16 +18,18 @@ default:	all
 
 all:		${TARGET}
 
-${BUIDLRUMP}:	
+${BUILDRUMP}:	
 		git submodule update --init --recursive
 
-${RUMPLIBS}:	buildrump.sh
+${RUMPLIBS}:	${BUILDRUMP}
 		./buildrump.sh/buildrump.sh -d ./rump -o ./buildrump.sh/obj -s ./buildrump.sh/src checkout fullbuild
 
-%.o:		${SRCDIR}/%.c ${RUMPLIBS}
+obj/%.o:		${SRCDIR}/%.c ${RUMPLIBS}
+		mkdir -p obj
 		${CC} $< ${CFLAGS} -o $@
 
-%.pico:		${SRCDIR}/%.c ${RUMPLIBS}
+obj/%.pico:		${SRCDIR}/%.c ${RUMPLIBS}
+		mkdir -p obj
 		${CC} $< ${CFLAGS} -fPIC -o $@
 
 ${DOTA}:	${OBJECTS} ${RUMPLIBS}
@@ -40,7 +42,7 @@ ${SHLIB}:	${PICA}
 		${CC} -Wl,-x -shared -Wl,-soname,${SONAME} -Wl,--warn-shared-textrel -o ${SHLIB} -Wl,--whole-archive ${PICA} -Wl,--no-whole-archive ${SOLIBS}
 
 clean:		
-		rm -rf ${OBJECTS} ${PICOBJECTS} ${PICA} ${TARGET} *~
+		rm -rf ${OBJECTS} ${PICOBJECTS} ${PICA} ${TARGET} *~ obj
 
 cleanrump:	
 		rm -rf rump
