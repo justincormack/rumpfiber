@@ -24,11 +24,11 @@ ${BUILDRUMP}:
 ${RUMPLIBS}:	${BUILDRUMP}
 		./buildrump.sh/buildrump.sh -d ./rump -o ./buildrump.sh/obj -s ./buildrump.sh/src checkout fullbuild
 
-obj/%.o:		${SRCDIR}/%.c ${RUMPLIBS}
+obj/%.o:	${SRCDIR}/%.c ${RUMPLIBS}
 		mkdir -p obj
 		${CC} $< ${CFLAGS} -o $@
 
-obj/%.pico:		${SRCDIR}/%.c ${RUMPLIBS}
+obj/%.pico:	${SRCDIR}/%.c ${RUMPLIBS}
 		mkdir -p obj
 		${CC} $< ${CFLAGS} -fPIC -o $@
 
