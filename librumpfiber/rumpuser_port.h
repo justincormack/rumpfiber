@@ -1,15 +1,9 @@
-/*	$NetBSD: rumpuser_port.h,v 1.22 2013/10/27 16:39:46 rmind Exp $	*/
+/*	$NetBSD: rumpuser_port.h,v 1.33 2014/06/17 09:53:59 justin Exp $	*/
 
 /*
  * Portability header for non-NetBSD platforms.
  * Quick & dirty.
  * Maybe should try to use the infrastructure in tools/compat instead?
- */
-
-/*
- * XXX:
- * There is currently no errno translation for the error values reported
- * by the hypercall layer.
  */
 
 #ifndef _LIB_LIBRUMPUSER_RUMPUSER_PORT_H_
@@ -26,9 +20,10 @@
 #define PLATFORM_HAS_FSYNC_RANGE
 #define PLATFORM_HAS_NBSYSCTL
 #define PLATFORM_HAS_NBFILEHANDLE
+#ifndef HAVE_PTHREAD_SETNAME_3
+#define HAVE_PTHREAD_SETNAME_3
+#endif
 
-#define PLATFORM_HAS_DISKLABEL
-#define PLATFORM_HAS_NBMODULES
 #define PLATFORM_HAS_STRSUFTOLL
 #define PLATFORM_HAS_SETGETPROGNAME
 
@@ -47,24 +42,43 @@
 #define PLATFORM_HAS_NBVFSSTAT
 #endif /* __NetBSD__ */
 
+#ifndef MIN
+#define MIN(a,b)        ((/*CONSTCOND*/(a)<(b))?(a):(b))
+#endif
+#ifndef MAX
+#define MAX(a,b)        ((/*CONSTCOND*/(a)>(b))?(a):(b))
+#endif
+
 /* might not be 100% accurate, maybe need to revisit later */
-#if defined(__linux__) || defined(__sun__)
+#if (defined(__linux__) && !defined(__ANDROID__)) || defined(__sun__)
 #define HAVE_CLOCK_NANOSLEEP
 #endif
 
 #ifdef __linux__
 #define _XOPEN_SOURCE 600
 #define _BSD_SOURCE
-#define _FILE_OFFSET_BITS 64
 #define _GNU_SOURCE
-#include <features.h>
+#endif
+
+#ifdef __ANDROID__
+#include <stdint.h>
+typedef uint16_t in_port_t;
+#include <sys/select.h>
+#define atomic_inc_uint(x)  __sync_fetch_and_add(x, 1)
+#define atomic_dec_uint(x)  __sync_fetch_and_sub(x, 1)
+static inline int getsubopt(char **optionp, char * const *tokens, char **valuep);
+static inline int
+getsubopt(char **optionp, char * const *tokens, char **valuep)
+{
+
+	/* TODO make a definition */
+	return -1;
+}
 #endif
 
 #if defined(__sun__)
 #  if defined(RUMPUSER_NO_FILE_OFFSET_BITS)
 #    undef _FILE_OFFSET_BITS
-#  else
-#    define _FILE_OFFSET_BITS 64
 #  endif
 #endif
 
@@ -98,9 +112,8 @@ clock_gettime(clockid_t clk, struct timespec *ts)
 #include <sys/types.h>
 #include <sys/param.h>
 
-/* maybe this should be !__NetBSD__ ? */
-#if defined(__linux__) || defined(__sun__) || defined(__FreeBSD__)	\
-    || defined(__DragonFly__) || defined(__APPLE__) || defined(__CYGWIN__)
+/* NetBSD is the only(?) platform with getenv_r() */
+#if !defined(__NetBSD__)
 #include <errno.h>
 #include <stdlib.h>
 #include <string.h>
@@ -173,7 +186,11 @@ posix_memalign(void **ptr, size_t align, size_t size)
 #endif
 
 #ifndef __printflike
+#ifdef __GNUC__
+#define __printflike(a,b) __attribute__((__format__ (__printf__,a,b)))
+#else
 #define __printflike(a,b)
+#endif
 #endif
 
 #ifndef __noinline
@@ -231,7 +248,7 @@ posix_memalign(void **ptr, size_t align, size_t size)
 #define MSG_NOSIGNAL 0
 #endif
 
-#if defined(__sun__) && !defined(RUMP_REGISTER_T)
+#if (defined(__sun__) || defined(__ANDROID__)) && !defined(RUMP_REGISTER_T)
 #define RUMP_REGISTER_T long
 typedef RUMP_REGISTER_T register_t;
 #endif
@@ -244,6 +261,10 @@ do {						\
 	(ts)->tv_sec  = (tv)->tv_sec;		\
 	(ts)->tv_nsec = (tv)->tv_usec * 1000;	\
 } while (/*CONSTCOND*/0)
+#endif
+
+#ifndef PLATFORM_HAS_SETGETPROGNAME
+#define setprogname(a)
 #endif
 
 #endif /* _LIB_LIBRUMPUSER_RUMPUSER_PORT_H_ */

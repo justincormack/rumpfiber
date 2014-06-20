@@ -1,4 +1,4 @@
-/*	$NetBSD: rumpuser.c,v 1.55 2013/10/27 16:39:46 rmind Exp $	*/
+/*	$NetBSD: rumpuser.c,v 1.59 2014/04/02 13:54:42 pooka Exp $	*/
 
 /*
  * Copyright (c) 2007-2010 Antti Kantee.  All Rights Reserved.
@@ -28,7 +28,7 @@
 #include "rumpuser_port.h"
 
 #if !defined(lint)
-__RCSID("$NetBSD: rumpuser.c,v 1.55 2013/10/27 16:39:46 rmind Exp $");
+__RCSID("$NetBSD: rumpuser.c,v 1.59 2014/04/02 13:54:42 pooka Exp $");
 #endif /* !lint */
 
 #include <sys/ioctl.h>
@@ -217,7 +217,7 @@ rumpuser_getfileinfo(const char *path, uint64_t *sizep, int *ftp)
 int
 rumpuser_malloc(size_t howmuch, int alignment, void **memp)
 {
-	void *mem;
+	void *mem = NULL;
 	int rv;
 
 	if (alignment == 0)
@@ -536,32 +536,9 @@ rumpuser_clock_sleep(int enum_rumpclock, int64_t sec, long nsec)
 static int
 gethostncpu(void)
 {
-	int ncpu = 1;
+	int ncpu = 1; /* unknown, really */
 
-#if defined(__BSD__)
-	size_t sz = sizeof(ncpu);
-
-	sysctlbyname("hw.ncpu", &ncpu, &sz, NULL, 0);
-#elif defined(__linux__) || defined(__CYGWIN__)
-	FILE *fp;
-	char *line = NULL;
-	size_t n = 0;
-
-	/* If anyone knows a better way, I'm all ears */
-	if ((fp = fopen("/proc/cpuinfo", "r")) != NULL) {
-		ncpu = 0;
-		while (getline(&line, &n, fp) != -1) {
-			if (strncmp(line,
-			    "processor", sizeof("processor")-1) == 0)
-			    	ncpu++;
-		}
-		if (ncpu == 0)
-			ncpu = 1;
-		free(line);
-		fclose(fp);
-	}
-#elif __sun__
-	/* XXX: this is just a rough estimate ... */
+#ifdef _SC_NPROCESSORS_ONLN
 	ncpu = sysconf(_SC_NPROCESSORS_ONLN);
 #endif
 	
@@ -643,28 +620,14 @@ rumpuser_dprintf(const char *format, ...)
 }
 
 int
-rumpuser_kill(int64_t pid, int sig)
+rumpuser_kill(int64_t pid, int rumpsig)
 {
-	int rv;
+	int sig;
 
-#ifdef __NetBSD__
-	int error;
-
-	if (pid == RUMPUSER_PID_SELF) {
-		error = raise(sig);
-	} else {
-		error = kill((pid_t)pid, sig);
-	}
-	if (error == -1)
-		rv = errno;
-	else
-		rv = 0;
-#else
-	/* XXXfixme: signal numbers may not match on non-NetBSD */
-	rv = EOPNOTSUPP;
-#endif
-
-	ET(rv);
+	sig = rumpuser__sig_rump2host(rumpsig);
+	if (sig > 0)
+		raise(sig);
+	return 0;
 }
 
 int
