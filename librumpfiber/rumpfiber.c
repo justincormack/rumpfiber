@@ -1,7 +1,6 @@
-/*	$NetBSD: rumpuser.c,v 1.59 2014/04/02 13:54:42 pooka Exp $	*/
-
 /*
  * Copyright (c) 2007-2010 Antti Kantee.  All Rights Reserved.
+ * Copyright (c) 2014 Justin Cormack.  All Rights Reserved.
  *
  * Redistribution and use in source and binary forms, with or without
  * modification, are permitted provided that the following conditions
@@ -26,10 +25,7 @@
  */
 
 #include "rumpuser_port.h"
-
-#if !defined(lint)
-__RCSID("$NetBSD: rumpuser.c,v 1.59 2014/04/02 13:54:42 pooka Exp $");
-#endif /* !lint */
+#include "rumpfiber_thread.h"
 
 #include <sys/ioctl.h>
 #include <sys/mman.h>
@@ -476,73 +472,23 @@ int
 rumpuser_clock_sleep(int enum_rumpclock, int64_t sec, long nsec)
 {
 	enum rumpclock rclk = enum_rumpclock;
-	struct timespec rqt, rmt;
+	uint32_t msec;
 	int nlocks;
-	int rv;
 
 	rumpkern_unsched(&nlocks, NULL);
-
-	/*LINTED*/
-	rqt.tv_sec = sec;
-	/*LINTED*/
-	rqt.tv_nsec = nsec;
-
 	switch (rclk) {
 	case RUMPUSER_CLOCK_RELWALL:
-		do {
-			rv = nanosleep(&rqt, &rmt);
-			rqt = rmt;
-		} while (rv == -1 && errno == EINTR);
-		if (rv == -1) {
-			rv = errno;
-		}
+		msec = sec * 1000 + nsec / (1000*1000UL);
+		msleep(msec);
 		break;
 	case RUMPUSER_CLOCK_ABSMONO:
-		do {
-#ifdef HAVE_CLOCK_NANOSLEEP
-			rv = clock_nanosleep(CLOCK_MONOTONIC, TIMER_ABSTIME,
-			    &rqt, NULL);
-#else
-			/* le/la/der/die/das sigh. timevalspec tailspin */
-			struct timespec ts, tsr;
-			clock_gettime(CLOCK_REALTIME, &ts);
-			if (ts.tv_sec == rqt.tv_sec ?
-			    ts.tv_nsec > rqt.tv_nsec : ts.tv_sec > rqt.tv_sec) {
-				rv = 0;
-			} else {
-				tsr.tv_sec = rqt.tv_sec - ts.tv_sec;
-				tsr.tv_nsec = rqt.tv_nsec - ts.tv_nsec;
-				if (tsr.tv_nsec < 0) {
-					tsr.tv_sec--;
-					tsr.tv_nsec += 1000*1000*1000;
-				}
-				rv = nanosleep(&tsr, NULL);
-			}
-#endif
-		} while (rv == -1 && errno == EINTR);
-		if (rv == -1) {
-			rv = errno;
-		}
+		msec = sec * 1000 + nsec / (1000*1000UL);
+		abssleep(msec);
 		break;
-	default:
-		abort();
 	}
-
 	rumpkern_sched(nlocks, NULL);
 
-	ET(rv);
-}
-
-static int
-gethostncpu(void)
-{
-	int ncpu = 1; /* unknown, really */
-
-#ifdef _SC_NPROCESSORS_ONLN
-	ncpu = sysconf(_SC_NPROCESSORS_ONLN);
-#endif
-	
-	return ncpu;
+	return 0;
 }
 
 int
@@ -551,14 +497,7 @@ rumpuser_getparam(const char *name, void *buf, size_t blen)
 	int rv;
 
 	if (strcmp(name, RUMPUSER_PARAM_NCPU) == 0) {
-		int ncpu;
-
-		if (getenv_r("RUMP_NCPU", buf, blen) == -1) {
-			sprintf(buf, "2"); /* default */
-		} else if (strcmp(buf, "host") == 0) {
-			ncpu = gethostncpu();
-			snprintf(buf, blen, "%d", ncpu);
-		}
+		sprintf(buf, "1");
 		rv = 0;
 	} else if (strcmp(name, RUMPUSER_PARAM_HOSTNAME) == 0) {
 		char tmp[MAXHOSTNAMELEN];
