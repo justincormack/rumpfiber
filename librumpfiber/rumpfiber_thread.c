@@ -73,8 +73,6 @@
 
 #include "rumpfiber_thread.h"
 
-#define printk(...) fprintf(stderr, __VA_ARGS__)
-
 TAILQ_HEAD(thread_list, thread);
 
 static struct thread_list exited_threads = TAILQ_HEAD_INITIALIZER(exited_threads);
@@ -83,27 +81,20 @@ static int threads_started;
 static struct thread *current_thread = NULL;
 struct thread *idle_thread = NULL;
 
-static inline struct thread *
+struct thread *
 get_current(void)
 {
 
 	return current_thread;
 }
 
-static inline int64_t
-tsms(struct timespec *ts)
-{
-
-	return (ts->tv_sec * 1000LL) + (ts->tv_nsec / 1000000LL);
-}
-
-static inline int64_t
+int64_t
 now(void)
 {
 	struct timespec ts;
 
 	clock_gettime(CLOCK_MONOTONIC, &ts);
-	return tsms(&ts);
+	return (ts.tv_sec * 1000LL) + (ts.tv_nsec / 1000000LL);
 }
 
 void

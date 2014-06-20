@@ -25,7 +25,9 @@
  * SUCH DAMAGE.
  */
 
-#include <stdlib.h>
+#include <stdint.h>
+
+#include "rumpuser_port.h"
 
 #include <rump/rumpuser.h>
 

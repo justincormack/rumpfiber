@@ -1,7 +1,10 @@
 
 #include <stdint.h>
+#include <stdio.h>
 
 #include "queue.h"
+
+#define printk(...) fprintf(stderr, __VA_ARGS__)
 
 struct thread {
     const char *name;
@@ -34,6 +37,8 @@ void join_thread(struct thread *);
 void schedule(void);
 void switch_threads(struct thread *prev, struct thread *next);
 void run_idle_thread(void);
+struct thread *get_current(void);
+int64_t now(void);
 
 void wake(struct thread *thread);
 void block(struct thread *thread);

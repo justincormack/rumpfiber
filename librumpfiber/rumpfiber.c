@@ -92,10 +92,11 @@ rumpuser_init(int version, const struct rumpuser_hyperup *hyp)
 	}
 #endif
 
-	rumpuser__thrinit();
-	rumpuser__hyp = *hyp;
+        rumpuser__hyp = *hyp;
 
-	return 0;
+	init_sched();
+
+        return 0;
 }
 
 int
