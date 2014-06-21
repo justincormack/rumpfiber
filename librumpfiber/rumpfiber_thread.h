@@ -39,7 +39,7 @@ void switch_threads(struct thread *prev, struct thread *next);
 void run_idle_thread(void);
 struct thread *get_current(void);
 int64_t now(void);
-
+void setcurrentthread(const char *name);
 void wake(struct thread *thread);
 void block(struct thread *thread);
 void msleep(uint64_t millisecs);

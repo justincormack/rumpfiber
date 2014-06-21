@@ -95,6 +95,7 @@ rumpuser_init(int version, const struct rumpuser_hyperup *hyp)
         rumpuser__hyp = *hyp;
 
 	init_sched();
+	setcurrentthread("init");
 
         return 0;
 }

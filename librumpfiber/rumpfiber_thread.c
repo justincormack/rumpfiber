@@ -70,6 +70,7 @@
 #include <string.h>
 #include <errno.h>
 #include <ucontext.h>
+#include <assert.h>
 
 #include "rumpfiber_thread.h"
 
@@ -77,7 +78,6 @@ TAILQ_HEAD(thread_list, thread);
 
 static struct thread_list exited_threads = TAILQ_HEAD_INITIALIZER(exited_threads);
 static struct thread_list thread_list = TAILQ_HEAD_INITIALIZER(thread_list);
-static int threads_started;
 static struct thread *current_thread = NULL;
 struct thread *idle_thread = NULL;
 
@@ -247,7 +247,7 @@ join_thread(struct thread *joinable)
 	}
 
 	/* signal exiting thread that we have seen it and it may now exit */
-	// ASSERT(joinable->flags & THREAD_JOINED); /* XXX */
+	assert(joinable->flags & THREAD_JOINED);
 	joinable->flags &= ~THREAD_MUSTJOIN;
 
 	wake(joinable);
@@ -288,19 +288,34 @@ void block(struct thread *thread)
 void idle_thread_fn(void *unused)
 {
 
-	threads_started = 1; /*XXX not used elsewhere */
 	while (1) {
 		block(get_current());
 		schedule();
 	}
 }
 
+/* XXX now unused */
 void
 run_idle_thread(void)
 {
 
 	current_thread = idle_thread;
 	setcontext(&idle_thread->ctx);
+}
+
+void
+setcurrentthread(const char *name)
+{
+	struct thread *thread = calloc(1, sizeof(struct thread));
+
+	getcontext(&thread->ctx);
+	thread->name = name;
+	thread->flags = 0;
+	thread->wakeup_time = -1LL;
+	thread->lwp = NULL;
+	set_runnable(thread);
+	TAILQ_INSERT_TAIL(&thread_list, thread, thread_list);
+	current_thread = thread;
 }
 
 void

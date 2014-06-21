@@ -92,6 +92,46 @@ wakeup_all(struct waithead *wh)
 	}
 }
 
+int
+rumpuser_thread_create(void *(*f)(void *), void *arg, const char *thrname,
+        int joinable, int pri, int cpuidx, void **tptr)
+{
+        struct thread *thr;
+        int nlocks;
+
+        rumpkern_unsched(&nlocks, NULL);
+        thr = create_thread(thrname, (void (*)(void *))f, arg);
+        /*
+         * XXX: should be supplied as a flag to create_thread() so as to
+         * _ensure_ it's set before the thread runs (and could exit).
+         * now we're trusting unclear semantics of create_thread()
+         */
+        if (thr && joinable)
+                thr->flags |= THREAD_MUSTJOIN;
+        rumpkern_sched(nlocks, NULL);
+
+        if (!thr)
+                return EINVAL;
+
+        *tptr = thr;
+        return 0;
+}
+
+void
+rumpuser_thread_exit(void)
+{
+
+        exit_thread();
+}
+
+int
+rumpuser_thread_join(void *p)
+{
+
+        join_thread(p);
+        return 0;
+}
+
 struct rumpuser_mtx {
 	struct waithead waiters;
 	int v;
