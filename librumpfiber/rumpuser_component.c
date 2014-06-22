@@ -36,7 +36,7 @@
  * are versioned by RUMPUSER_VERSION.
  */
 
-#include <rump/rumpuser_component.h>
+#include <rumpuser_component.h>
 
 #include "rumpuser_int.h"
 

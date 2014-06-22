@@ -1,4 +1,4 @@
-INCLUDE=-I./rump/include/ -I./buildrump.sh/src/tools/compat
+INCLUDE=-Ilibrumpfiber -I./rump/include/ -I./buildrump.sh/src/tools/compat
 WARN=-Wall -Wstrict-prototypes -Wmissing-prototypes -Wpointer-arith -Wno-sign-compare  -Wno-traditional  -Wa,--fatal-warnings -Wreturn-type -Wswitch -Wshadow -Wcast-qual -Wwrite-strings -Wextra -Wno-unused-parameter -Wno-sign-compare -Wold-style-definition -Wsign-compare -Wformat=2   -Wno-format-zero-length  -Werror
 CFLAGS=${INCLUDE} -O0 -g -fPIC -std=gnu99 ${WARN} -DLIBRUMPUSER -D_REENTRANT  -c -DGPROF -DPROF
 SRCDIR=./librumpfiber
@@ -7,7 +7,7 @@ OBJECTS=$(SOURCES:%.c=obj/%.o)
 PICOBJECTS=$(SOURCES:%.c=obj/%.pico)
 DOTA=rump/lib/librumpuser.a
 PICA=obj/librumpuser_pic.a
-SOLIBS=-lrt -ldl
+SOLIBS=-ldl
 SONAME=librumpuser.so.0
 LIBDIR=${PWD}/rump/lib
 SHLIB=librumpuser.so.0.1
@@ -26,7 +26,7 @@ ${BUILDRUMP}:
 		git submodule update --init --recursive
 
 ${RUMPLIBS}:	${BUILDRUMP}
-		./buildrump.sh/buildrump.sh -d ./rump -o ./buildrump.sh/obj -s ./buildrump.sh/src -k checkout fullbuild
+		./buildrump.sh/buildrump.sh -d ./rump -o ./buildrump.sh/obj -s ./buildrump.sh/src -k -V RUMP_CURLWP=hypercall checkout fullbuild
 
 obj/%.o:	${SRCDIR}/%.c ${RUMPLIBS}
 		mkdir -p obj
@@ -45,7 +45,7 @@ ${PICA}:	${PICOBJECTS} ${RUMPLIBS} cleana
 		ranlib $@
 
 ${SHLIBDIR}:	${PICA}
-		${CC} -Wl,-x -shared -Wl,-soname,${SONAME} -Wl,--warn-shared-textrel -o ${SHLIB} -Wl,--whole-archive ${PICA} -Wl,--no-whole-archive ${SOLIBS}
+		${CC} -Wl,-x -shared -Wl,-soname,${SONAME} -Wl,--warn-shared-textrel -o ${SHLIBDIR} -Wl,--whole-archive ${PICA} -Wl,--no-whole-archive ${SOLIBS}
 		rm -f rump/lib/${SYM1} rump/lib/${SYM2}
 		ln -s ${SHLIB} rump/lib/${SYM1}
 		ln -s ${SHLIB} rump/lib/${SYM2}
