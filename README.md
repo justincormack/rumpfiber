@@ -1,4 +1,5 @@
-librumpuser-standalone
-======================
+librumpfiber
+============
 
-A Makefile to build librumpuser from the [NetBSD rump kernel](https://github.com/anttikantee/buildrump.sh) on its own, useful if you want to fork it.
+A [NetBSD rump kernel](https://github.com/anttikantee/buildrump.sh) hypercall library based on fibers (userspace threads, using swapcontext) rather than pthreads.
+
