@@ -1,5 +1,7 @@
 librumpfiber
 ============
 
-A [NetBSD rump kernel](https://github.com/anttikantee/buildrump.sh) hypercall library based on fibers (userspace threads, using swapcontext) rather than pthreads.
+[![Build Status](https://travis-ci.org/rumpkernel/rumpfiber.png)](https://travis-ci.org/rumpkernel/rumpfiber)
+
+A [NetBSD rump kernel](https://rumpkernel.org) hypercall library based on fibers (userspace threads, using swapcontext) rather than pthreads.
 
