@@ -60,4 +60,4 @@ clean:
 
 .PHONY: cleanrump
 cleanrump:	clean
-		rm -rf rump
+		rm -rf rump buildrump.sh/obj
