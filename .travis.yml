@@ -10,5 +10,5 @@ script:
  - make
  - git clone https://github.com/justincormack/ljsyscall.git
  - cd ljsyscall
- - LD_LIBRARY_PATH=../rump/lib luajit test/test.lua
+ - LD_LIBRARY_PATH=../rump/lib luajit test/test.lua rump
 
