@@ -9,8 +9,12 @@ DOTA=rump/lib/librumpuser.a
 PICA=obj/librumpuser_pic.a
 SOLIBS=-lrt -ldl
 SONAME=librumpuser.so.0
-SHLIB=rump/lib/librumpuser.so.0.1
-TARGET=${SHLIB} ${DOTA}
+LIBDIR=${PWD}/rump/lib
+SHLIB=librumpuser.so.0.1
+SYM1=${SONAME}
+SYM2=librumpuser.so
+SHLIBDIR=${LIBDIR}/${SHLIB}
+TARGET=${SHLIBDIR} ${DOTA}
 BUILDRUMP=buildrump.sh/buildrump.sh
 RUMPLIBS=rump/lib/librump.so
 
@@ -40,8 +44,11 @@ ${PICA}:	${PICOBJECTS} ${RUMPLIBS} cleana
 		${AR} rc $@ ${PICOBJECTS}
 		ranlib $@
 
-${SHLIB}:	${PICA}
+${SHLIBDIR}:	${PICA}
 		${CC} -Wl,-x -shared -Wl,-soname,${SONAME} -Wl,--warn-shared-textrel -o ${SHLIB} -Wl,--whole-archive ${PICA} -Wl,--no-whole-archive ${SOLIBS}
+		rm -f rump/lib/${SYM1} rump/lib/${SYM2}
+		ln -s ${SHLIB} rump/lib/${SYM1}
+		ln -s ${SHLIB} rump/lib/${SYM2}
 
 .PHONY: cleana
 cleana:
