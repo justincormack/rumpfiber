@@ -26,7 +26,7 @@ ${BUILDRUMP}:
 		git submodule update --init --recursive
 
 ${RUMPLIBS}:	${BUILDRUMP}
-		./buildrump.sh/buildrump.sh -qq -d ./rump -o ./buildrump.sh/obj -s ./buildrump.sh/src -k -V RUMP_CURLWP=hypercall checkout fullbuild
+		./buildrump.sh/buildrump.sh -qq -d ./rump -o ./buildrump.sh/obj -s ./buildrump.sh/src -k -V RUMP_CURLWP=hypercall -V RUMP_LOCKS_UP=yes checkout fullbuild
 
 obj/%.o:	${SRCDIR}/%.c ${RUMPLIBS}
 		mkdir -p obj
