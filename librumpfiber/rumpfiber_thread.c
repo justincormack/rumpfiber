@@ -153,7 +153,7 @@ create_thread(const char *name, void (*f)(void *), void *data)
 	char *stack;
 
 	getcontext(&thread->ctx);
-	stack = mmap(NULL, STACKSIZE, PROT_READ | PROT_WRITE, MAP_SHARED | MAP_ANONYMOUS, -1, 0);
+	stack = mmap(NULL, STACKSIZE, PROT_READ | PROT_WRITE, MAP_SHARED | MAP_ANON, -1, 0);
 	if (stack == MAP_FAILED) {
 		return NULL;
 	}
