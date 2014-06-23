@@ -2,7 +2,7 @@ INCLUDE=-Ilibrumpfiber -I./rump/include/ -I./buildrump.sh/src/tools/compat
 WARN=-Wall -Wstrict-prototypes -Wmissing-prototypes -Wpointer-arith -Wno-sign-compare  -Wno-traditional  -Wa,--fatal-warnings -Wreturn-type -Wswitch -Wshadow -Wcast-qual -Wwrite-strings -Wextra -Wno-unused-parameter -Wno-sign-compare -Wold-style-definition -Wsign-compare -Wformat=2   -Wno-format-zero-length  -Werror
 CFLAGS=${INCLUDE} -O0 -g -fPIC -std=gnu99 ${WARN} -DLIBRUMPUSER -D_REENTRANT  -c -DGPROF -DPROF
 SRCDIR=./librumpfiber
-SOURCES=rumpfiber.c rumpfiber_thread.c rumpfiber_synch.c rumpuser_component.c rumpuser_dl.c rumpuser_errtrans.c rumpuser_sigtrans.c
+SOURCES=rumpfiber.c rumpfiber_thread.c rumpfiber_synch.c rumpfiber_stubs.c rumpuser_component.c rumpuser_dl.c rumpuser_errtrans.c rumpuser_sigtrans.c
 OBJECTS=$(SOURCES:%.c=obj/%.o)
 PICOBJECTS=$(SOURCES:%.c=obj/%.pico)
 DOTA=rump/lib/librumpuser.a
