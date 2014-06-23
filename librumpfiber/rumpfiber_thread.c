@@ -74,6 +74,18 @@
 
 #include "rumpfiber_thread.h"
 
+/* compatibility */
+#ifndef HAVE_CLOCK_NANOSLEEP
+int
+clock_nanosleep(clockid_t clock_id, int flags,
+	const struct timespec *request, struct timespec *remain)
+{
+
+	assert(flags == 0);
+	return nanosleep(request, remain);
+}
+#endif
+
 TAILQ_HEAD(thread_list, thread);
 
 static struct thread_list exited_threads = TAILQ_HEAD_INITIALIZER(exited_threads);

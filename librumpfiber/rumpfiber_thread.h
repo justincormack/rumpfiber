@@ -2,6 +2,7 @@
 #include <stdint.h>
 #include <stdio.h>
 #include <ucontext.h>
+#include <time.h>
 
 #include "queue.h"
 
@@ -45,4 +46,21 @@ void wake(struct thread *thread);
 void block(struct thread *thread);
 void msleep(uint64_t millisecs);
 void abssleep(uint64_t millisecs);
+
+/* compatibility, replace with some sort of configure system */
+
+#ifdef __NetBSD__
+#if __NetBSD_Prereq__(6,99,16)
+#define HAVE_CLOCK_NANOSLEEP
+#endif
+#endif
+
+#if (defined(__linux__) && !defined(__ANDROID__)) || defined(__sun__)
+#define HAVE_CLOCK_NANOSLEEP
+#endif
+
+#ifndef HAVE_CLOCK_NANOSLEEP
+int clock_nanosleep(clockid_t clock_id, int flags,
+	const struct timespec *request, struct timespec *remain);
+#endif
 
