@@ -175,6 +175,7 @@ create_thread(const char *name, void (*f)(void *), void *data)
 	thread->ctx.uc_link = NULL; /* TODO may link to main thread */
 	makecontext(&thread->ctx, (void (*)(void))f, 1, data);
 
+	thread->name = name;
 	/* Not runnable, not exited, not sleeping */
 	thread->flags = 0;
 	thread->wakeup_time = -1LL;
