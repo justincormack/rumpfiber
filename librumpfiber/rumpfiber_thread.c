@@ -151,6 +151,7 @@ schedule(void)
 		if (thread != prev) {
 			TAILQ_REMOVE(&exited_threads, thread, thread_list);
 			munmap(thread->ctx.uc_stack.ss_sp, STACKSIZE);
+			free(thread->name);
 			free(thread);
 		}
 	}
@@ -163,6 +164,7 @@ create_thread(const char *name, void (*f)(void *), void *data)
 {
 	struct thread *thread = calloc(1, sizeof(struct thread));
 	char *stack;
+	char *namea = strdup(name);
 
 	getcontext(&thread->ctx);
 	stack = mmap(NULL, STACKSIZE, PROT_READ | PROT_WRITE, MAP_SHARED | MAP_ANON, -1, 0);
@@ -174,8 +176,9 @@ create_thread(const char *name, void (*f)(void *), void *data)
 	thread->ctx.uc_stack.ss_flags = 0;
 	thread->ctx.uc_link = NULL; /* TODO may link to main thread */
 	makecontext(&thread->ctx, (void (*)(void))f, 1, data);
+	
+	thread->name = namea;
 
-	thread->name = name;
 	/* Not runnable, not exited, not sleeping */
 	thread->flags = 0;
 	thread->wakeup_time = -1LL;
@@ -320,9 +323,10 @@ void
 setcurrentthread(const char *name)
 {
 	struct thread *thread = calloc(1, sizeof(struct thread));
+	char *namea = strdup(name);
 
 	getcontext(&thread->ctx);
-	thread->name = name;
+	thread->name = namea;
 	thread->flags = 0;
 	thread->wakeup_time = -1LL;
 	thread->lwp = NULL;

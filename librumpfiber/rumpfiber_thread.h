@@ -9,7 +9,7 @@
 #define printk(...) fprintf(stderr, __VA_ARGS__)
 
 struct thread {
-    const char *name;
+    char *name;
     void *lwp;
     int64_t wakeup_time;
     TAILQ_ENTRY(thread) thread_list;
