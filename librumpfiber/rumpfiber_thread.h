@@ -50,6 +50,8 @@ void abssleep(uint64_t millisecs);
 /* compatibility, replace with some sort of configure system */
 
 #ifdef __NetBSD__
+#include <sys/cdefs.h>
+#include <sys/param.h>
 #if __NetBSD_Prereq__(6,99,16)
 #define HAVE_CLOCK_NANOSLEEP
 #endif
