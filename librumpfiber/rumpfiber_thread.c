@@ -123,7 +123,7 @@ schedule(void)
 		wakeup = tm + 1000; /* wake up in 1s max */
 		next = NULL;
 		TAILQ_FOREACH_SAFE(thread, &thread_list, thread_list, tmp) {
-			if (! is_runnable(thread) && thread->wakeup_time >= 0LL) {
+			if (!is_runnable(thread) && thread->wakeup_time >= 0) {
 				if (thread->wakeup_time <= tm)
 					wake(thread);
 				else if (thread->wakeup_time < wakeup)
@@ -180,8 +180,7 @@ create_thread(const char *name, void (*f)(void *), void *data)
 	thread->name = namea;
 
 	/* Not runnable, not exited, not sleeping */
-	thread->flags = 0;
-	thread->wakeup_time = -1LL;
+	thread->wakeup_time = -1;
 	thread->lwp = NULL;
 	set_runnable(thread);
 	TAILQ_INSERT_TAIL(&thread_list, thread, thread_list);
@@ -290,14 +289,14 @@ void abssleep(uint64_t millisecs)
 void wake(struct thread *thread)
 {
 
-	thread->wakeup_time = 0LL;
+	thread->wakeup_time = -1;
 	set_runnable(thread);
 }
 
 void block(struct thread *thread)
 {
 
-	thread->wakeup_time = 0LL;
+	thread->wakeup_time = -1;
 	clear_runnable(thread);
 }
 
@@ -328,7 +327,7 @@ setcurrentthread(const char *name)
 	getcontext(&thread->ctx);
 	thread->name = namea;
 	thread->flags = 0;
-	thread->wakeup_time = -1LL;
+	thread->wakeup_time = -1;
 	thread->lwp = NULL;
 	set_runnable(thread);
 	TAILQ_INSERT_TAIL(&thread_list, thread, thread_list);
