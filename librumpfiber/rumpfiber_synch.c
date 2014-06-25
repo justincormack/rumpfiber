@@ -49,7 +49,7 @@ struct waiter {
 };
 
 static int
-wait(struct waithead *wh, uint64_t nsec)
+wait(struct waithead *wh, uint64_t msec)
 {
 	struct waiter w;
 
@@ -57,8 +57,8 @@ wait(struct waithead *wh, uint64_t nsec)
 	TAILQ_INSERT_TAIL(wh, &w, entries);
 	w.onlist = 1;
 	block(w.who);
-	if (nsec)
-		w.who->wakeup_time = now() + nsec;
+	if (msec)
+		w.who->wakeup_time = now() + msec;
 	schedule();
 
 	/* woken up by timeout? */
@@ -431,7 +431,7 @@ rumpuser_cv_timedwait(struct rumpuser_cv *cv, struct rumpuser_mtx *mtx,
 
 	cv->nwaiters++;
 	cv_unsched(mtx, &nlocks);
-	rv = wait(&cv->waiters, sec * 1000*1000*1000ULL + nsec);
+	rv = wait(&cv->waiters, sec * 1000 + nsec / (1000*1000));
 	cv_resched(mtx, nlocks);
 	cv->nwaiters--;
 
