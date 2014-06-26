@@ -157,24 +157,38 @@ schedule(void)
 	}
 }
 
+static int create_ctx(ucontext_t *ctx);
+
+static int
+create_ctx(ucontext_t *ctx)
+{
+	char *stack;
+
+	getcontext(ctx);
+	stack = mmap(NULL, STACKSIZE, PROT_READ | PROT_WRITE, MAP_SHARED | MAP_ANON, -1, 0);
+	if (stack == MAP_FAILED) {
+		return -1;
+	}
+	ctx->uc_stack.ss_sp = stack;
+	ctx->uc_stack.ss_size = STACKSIZE;
+	ctx->uc_stack.ss_flags = 0;
+	ctx->uc_link = NULL; /* TODO may link to main thread */
+
+	return 0;
+}
+
 /* may have to do bounce function to call, if args to makecontext are ints */
 /* TODO see notes in rumpuser_thread_create, have flags here */
 struct thread *
 create_thread(const char *name, void (*f)(void *), void *data)
 {
 	struct thread *thread = calloc(1, sizeof(struct thread));
-	char *stack;
 	char *namea = strdup(name);
 
-	getcontext(&thread->ctx);
-	stack = mmap(NULL, STACKSIZE, PROT_READ | PROT_WRITE, MAP_SHARED | MAP_ANON, -1, 0);
-	if (stack == MAP_FAILED) {
+	if (create_ctx(&thread->ctx) < 0) {
 		return NULL;
 	}
-	thread->ctx.uc_stack.ss_sp = stack;
-	thread->ctx.uc_stack.ss_size = STACKSIZE;
-	thread->ctx.uc_stack.ss_flags = 0;
-	thread->ctx.uc_link = NULL; /* TODO may link to main thread */
+
 	makecontext(&thread->ctx, (void (*)(void))f, 1, data);
 	
 	thread->name = namea;
