@@ -449,11 +449,7 @@ rumpuser_clock_gettime(int enum_rumpclock, int64_t *sec, long *nsec)
 		clk = CLOCK_REALTIME;
 		break;
 	case RUMPUSER_CLOCK_ABSMONO:
-#ifdef HAVE_CLOCK_NANOSLEEP
 		clk = CLOCK_MONOTONIC;
-#else
-		clk = CLOCK_REALTIME;
-#endif
 		break;
 	default:
 		abort();
