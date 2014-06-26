@@ -24,9 +24,5 @@ TIMETOPANIC(rumpuser_sp_copyinstr);
 TIMETOPANIC(rumpuser_sp_copyoutstr);
 TIMETOPANIC(rumpuser_sp_anonmmap);
 
-/* daemonize not done yet */
-NOTHING(rumpuser_daemonize_begin);
-NOTHING(rumpuser_daemonize_done);
-
 /* bio not done yet */
 TIMETOPANIC(rumpuser_bio)
