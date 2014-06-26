@@ -23,7 +23,7 @@
  * SUCH DAMAGE.
  */
 
-/* Based partly on the following code from Xen Minios */
+/* Based partly on code from Xen Minios with the following license */
 
 /* 
  ****************************************************************************
