@@ -50,9 +50,16 @@ ${SHLIBDIR}:	${PICA}
 		ln -s ${SHLIB} rump/lib/${SYM1}
 		ln -s ${SHLIB} rump/lib/${SYM2}
 
+ljsyscall:
+		git clone https://github.com/justincormack/ljsyscall.git
+
+test: ljsyscall
+		( cd ljsyscall && LD_LIBRARY_PATH=../rump/lib luajit test/test.lua rump )
+
 .PHONY: cleana
 cleana:
 		rm -f ${DOTA} ${PICA}
+		rm -rf ljsyscall
 
 .PHONY: clean
 clean:		
