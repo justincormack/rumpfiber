@@ -1,7 +1,5 @@
-librumpfiber
+librumpfiber [![Build Status](https://travis-ci.org/rumpkernel/rumpfiber.png?branch=master)](https://travis-ci.org/rumpkernel/rumpfiber)
 ============
-
-[![Build Status](https://travis-ci.org/rumpkernel/rumpfiber.png)](https://travis-ci.org/rumpkernel/rumpfiber)
 
 A [rump kernel](http://rumpkernel.org) hypercall library based on fibers (userspace threads, using swapcontext) rather than pthreads.
 
