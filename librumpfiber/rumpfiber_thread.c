@@ -93,6 +93,8 @@ static struct thread_list thread_list = TAILQ_HEAD_INITIALIZER(thread_list);
 static struct thread *current_thread = NULL;
 struct thread *idle_thread = NULL;
 
+static void (*scheduler_hook)(void *, void *);
+
 struct thread *
 get_current(void)
 {
@@ -124,9 +126,10 @@ schedule(void)
 		next = NULL;
 		TAILQ_FOREACH_SAFE(thread, &thread_list, thread_list, tmp) {
 			if (!is_runnable(thread) && thread->wakeup_time >= 0) {
-				if (thread->wakeup_time <= tm)
+				if (thread->wakeup_time <= tm) {
+					thread->flags |= THREAD_TIMEDOUT;
 					wake(thread);
-				else if (thread->wakeup_time < wakeup)
+				} else if (thread->wakeup_time < wakeup)
 					wakeup = thread->wakeup_time;
 			}
 			if (is_runnable(thread)) {
@@ -150,48 +153,50 @@ schedule(void)
 	TAILQ_FOREACH_SAFE(thread, &exited_threads, thread_list, tmp) {
 		if (thread != prev) {
 			TAILQ_REMOVE(&exited_threads, thread, thread_list);
-			munmap(thread->ctx.uc_stack.ss_sp, STACKSIZE);
+			if ((thread->flags & THREAD_EXTSTACK) == 0)
+				munmap(thread->ctx.uc_stack.ss_sp, STACKSIZE);
 			free(thread->name);
 			free(thread);
 		}
 	}
 }
 
-static int create_ctx(ucontext_t *ctx);
-
-static int
-create_ctx(ucontext_t *ctx)
+static void
+create_ctx(ucontext_t *ctx, void *stack, size_t stack_size)
 {
-	char *stack;
 
 	getcontext(ctx);
-	stack = mmap(NULL, STACKSIZE, PROT_READ | PROT_WRITE, MAP_SHARED | MAP_ANON, -1, 0);
-	if (stack == MAP_FAILED) {
-		return -1;
-	}
 	ctx->uc_stack.ss_sp = stack;
-	ctx->uc_stack.ss_size = STACKSIZE;
+	ctx->uc_stack.ss_size = stack_size;
 	ctx->uc_stack.ss_flags = 0;
 	ctx->uc_link = NULL; /* TODO may link to main thread */
-
-	return 0;
 }
 
 /* may have to do bounce function to call, if args to makecontext are ints */
 /* TODO see notes in rumpuser_thread_create, have flags here */
 struct thread *
-create_thread(const char *name, void (*f)(void *), void *data)
+create_thread(const char *name, void *cookie, void (*f)(void *), void *data,
+	void *stack, size_t stack_size)
 {
 	struct thread *thread = calloc(1, sizeof(struct thread));
 	char *namea = strdup(name);
 
-	if (create_ctx(&thread->ctx) < 0) {
-		return NULL;
+	if (!stack) {
+		assert(stack_size == 0);
+		stack = mmap(NULL, STACKSIZE, PROT_READ | PROT_WRITE,
+		    MAP_SHARED | MAP_ANON, -1, 0);
+		if (stack == MAP_FAILED) {
+			return NULL;
+		}
+		stack_size = STACKSIZE;
+	} else {
+		thread->flags = THREAD_EXTSTACK;
 	}
-
+	create_ctx(&thread->ctx, stack, stack_size);
 	makecontext(&thread->ctx, (void (*)(void))f, 1, data);
 	
 	thread->name = namea;
+	thread->cookie = cookie;
 
 	/* Not runnable, not exited, not sleeping */
 	thread->wakeup_time = -1;
@@ -208,6 +213,8 @@ switch_threads(struct thread *prev, struct thread *next)
 	int ret;
 
 	current_thread = next;
+	if (scheduler_hook)
+		scheduler_hook(prev->cookie, next->cookie);
 	ret = swapcontext(&prev->ctx, &next->ctx);
 	if (ret < 0) {
 		printk("swapcontext failed: %s\n", strerror(errno));
@@ -300,6 +307,26 @@ void abssleep(uint64_t millisecs)
 	schedule();
 }
 
+/* like abssleep, except against realtime clock instead of monotonic clock */
+int abssleep_real(uint64_t millisecs)
+{
+	struct thread *thread = get_current();
+	struct timespec ts;
+	uint64_t real_now;
+	int rv;
+
+	clock_gettime(CLOCK_REALTIME, &ts);
+	real_now = 1000*ts.tv_sec + ts.tv_nsec/(1000*1000);
+	thread->wakeup_time = now() + (millisecs - real_now);
+
+	clear_runnable(thread);
+	schedule();
+
+	rv = !!(thread->flags & THREAD_TIMEDOUT);
+	thread->flags &= ~THREAD_TIMEDOUT;
+	return rv;
+}
+
 void wake(struct thread *thread)
 {
 
@@ -321,6 +348,24 @@ void idle_thread_fn(void *unused)
 		block(get_current());
 		schedule();
 	}
+}
+
+int is_runnable(struct thread *thread)
+{
+
+	return thread->flags & RUNNABLE_FLAG;
+}
+
+void set_runnable(struct thread *thread)
+{
+
+	thread->flags |= RUNNABLE_FLAG;
+}
+
+void clear_runnable(struct thread *thread)
+{
+
+	thread->flags &= ~RUNNABLE_FLAG;
 }
 
 /* XXX now unused */
@@ -352,10 +397,25 @@ void
 init_sched(void)
 {
 
-	idle_thread = create_thread("Idle", idle_thread_fn, NULL);
+	idle_thread = create_thread("Idle", NULL,
+	    idle_thread_fn, NULL, NULL, 0);
 	if (! idle_thread) {
 		printk("failed to create idle thread\n");
 		exit(1);
 	}
 }
 
+void
+set_sched_hook(void (*f)(void *, void *))
+{
+
+	scheduler_hook = f;
+}
+
+struct thread *
+init_mainthread(void *cookie)
+{
+
+	current_thread->cookie = cookie;
+	return current_thread;
+}

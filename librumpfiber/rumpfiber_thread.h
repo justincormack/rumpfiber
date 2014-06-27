@@ -11,6 +11,7 @@
 struct thread {
     char *name;
     void *lwp;
+    void *cookie;
     int64_t wakeup_time;
     TAILQ_ENTRY(thread) thread_list;
     ucontext_t ctx;
@@ -21,19 +22,25 @@ struct thread {
 extern struct thread *idle_thread;
 void idle_thread_fn(void *unused);
 
+int is_runnable(struct thread *);
+void set_runnable(struct thread *);
+void clear_runnable(struct thread *);
+
 #define RUNNABLE_FLAG   0x00000001
 #define THREAD_MUSTJOIN 0x00000002
 #define THREAD_JOINED   0x00000004
-
-#define is_runnable(_thread)    (_thread->flags & RUNNABLE_FLAG)
-#define set_runnable(_thread)   (_thread->flags |= RUNNABLE_FLAG)
-#define clear_runnable(_thread) (_thread->flags &= ~RUNNABLE_FLAG)
+#define THREAD_EXTSTACK 0x00000008
+#define THREAD_TIMEDOUT 0x00000010
 
 #define STACKSIZE 65536
 
 void init_sched(void);
+void set_sched_hook(void (*f)(void *, void *));
+struct thread *init_mainthread(void *);
 void run_idle_thread(void);
-struct thread* create_thread(const char *name, void (*f)(void *), void *data);
+struct thread* create_thread(const char *name, void *cookie,
+			     void (*f)(void *), void *data,
+			     void *stack, size_t stack_size);
 void exit_thread(void) __attribute__((noreturn));
 void join_thread(struct thread *);
 void schedule(void);
@@ -46,6 +53,7 @@ void wake(struct thread *thread);
 void block(struct thread *thread);
 void msleep(uint64_t millisecs);
 void abssleep(uint64_t millisecs);
+int abssleep_real(uint64_t millisecs);
 
 /* compatibility, replace with some sort of configure system */
 

@@ -97,10 +97,8 @@ rumpuser_thread_create(void *(*f)(void *), void *arg, const char *thrname,
         int joinable, int pri, int cpuidx, void **tptr)
 {
         struct thread *thr;
-        int nlocks;
 
-        rumpkern_unsched(&nlocks, NULL);
-        thr = create_thread(thrname, (void (*)(void *))f, arg);
+        thr = create_thread(thrname, NULL, (void (*)(void *))f, arg, NULL, 0);
         /*
          * XXX: should be supplied as a flag to create_thread() so as to
          * _ensure_ it's set before the thread runs (and could exit).
@@ -108,7 +106,6 @@ rumpuser_thread_create(void *(*f)(void *), void *arg, const char *thrname,
          */
         if (thr && joinable)
                 thr->flags |= THREAD_MUSTJOIN;
-        rumpkern_sched(nlocks, NULL);
 
         if (!thr)
                 return EINVAL;
