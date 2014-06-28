@@ -7,7 +7,6 @@ OBJECTS=$(SOURCES:%.c=obj/%.o)
 PICOBJECTS=$(SOURCES:%.c=obj/%.pico)
 DOTA=rump/lib/librumpuser.a
 PICA=obj/librumpuser_pic.a
-SOLIBS=-ldl -lrt
 SONAME=librumpuser.so.0
 LIBDIR=${PWD}/rump/lib
 SHLIB=librumpuser.so.0.1
@@ -17,6 +16,10 @@ SHLIBDIR=${LIBDIR}/${SHLIB}
 TARGET=${SHLIBDIR} ${DOTA}
 BUILDRUMP=buildrump.sh/buildrump.sh
 RUMPLIBS=rump/lib/librump.so
+# Linux, -lrt not required on recent versions
+SOLIBS=-ldl -lrt
+# NetBSD
+#SOLIBS=
 
 default:	all
 
