@@ -6,7 +6,7 @@
 
 #include "queue.h"
 
-#define printk(...) fprintf(stderr, __VA_ARGS__)
+#define printk(...) dprintf(2, __VA_ARGS__)
 
 struct thread {
     char *name;
