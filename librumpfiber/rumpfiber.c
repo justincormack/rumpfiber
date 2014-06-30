@@ -73,14 +73,12 @@ static int64_t now(void);
 static void setcurrentthread(const char *name);
 static void msleep(uint64_t millisecs);
 static void abssleep(uint64_t millisecs);
-static void idle_thread_fn(void *unused);
 
 TAILQ_HEAD(thread_list, thread);
 
 static struct thread_list exited_threads = TAILQ_HEAD_INITIALIZER(exited_threads);
 static struct thread_list thread_list = TAILQ_HEAD_INITIALIZER(thread_list);
 static struct thread *current_thread = NULL;
-static struct thread *idle_thread = NULL;
 
 static void (*scheduler_hook)(void *, void *);
 
@@ -330,15 +328,6 @@ void block(struct thread *thread)
 	clear_runnable(thread);
 }
 
-static void idle_thread_fn(void *unused)
-{
-
-	while (1) {
-		block(get_current());
-		schedule();
-	}
-}
-
 int is_runnable(struct thread *thread)
 {
 
@@ -377,12 +366,6 @@ static void
 init_sched(void)
 {
 
-	idle_thread = create_thread("Idle", NULL,
-	    idle_thread_fn, NULL, NULL, 0);
-	if (! idle_thread) {
-		printk("failed to create idle thread\n");
-		exit(1);
-	}
 }
 
 void
