@@ -1,12 +1,13 @@
 
 #include <stdint.h>
-#include <stdio.h>
 #include <ucontext.h>
 #include <time.h>
+#include <unistd.h>
+#include <string.h>
 
 #include "queue.h"
 
-#define printk(...) dprintf(2, __VA_ARGS__)
+#define printk(s) (void)write(2, s, strlen(s))
 
 struct thread {
     char *name;
