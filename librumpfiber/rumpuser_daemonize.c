@@ -37,7 +37,6 @@ __RCSID("$NetBSD: rumpuser_daemonize.c,v 1.6 2013/05/07 15:18:35 pooka Exp $");
 #include <errno.h>
 #include <fcntl.h>
 #include <stdint.h>
-#include <stdio.h>
 #include <unistd.h>
 
 #include "rumpuser_int.h"
