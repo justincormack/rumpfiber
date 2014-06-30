@@ -37,7 +37,7 @@
 #include <assert.h>
 
 #include "rumpuser_int.h"
-#include "rumpfiber_thread.h"
+#include "rumpfiber.h"
 
 #include "queue.h"
 

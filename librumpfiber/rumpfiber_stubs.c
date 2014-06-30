@@ -1,6 +1,6 @@
 #include <stdlib.h>
 
-#include "rumpfiber_thread.h"
+#include "rumpfiber.h"
 
 int ohcrap(void);
 int ohcrap(void) {printk("rumphyper: unimplemented stub\n"); exit(1);}

@@ -72,7 +72,7 @@
 #include <assert.h>
 #include <unistd.h>
 
-#include "rumpfiber_thread.h"
+#include "rumpfiber.h"
 
 /* compatibility */
 #ifndef HAVE_CLOCK_NANOSLEEP

@@ -25,7 +25,6 @@
  */
 
 #include "rumpuser_port.h"
-#include "rumpfiber_thread.h"
 
 #include <sys/ioctl.h>
 #include <sys/mman.h>
@@ -64,6 +63,7 @@
 #include <rump/rumpuser.h>
 
 #include "rumpuser_int.h"
+#include "rumpfiber.h"
 
 struct rumpuser_hyperup rumpuser__hyp;
 
@@ -72,8 +72,7 @@ rumpuser_init(int version, const struct rumpuser_hyperup *hyp)
 {
 
 	if (version != RUMPUSER_VERSION) {
-		fprintf(stderr, "rumpuser mismatch, kern: %d, hypervisor %d\n",
-		    version, RUMPUSER_VERSION);
+		printk("rumpuser version mismatch\n");
 		return 1;
 	}
 
@@ -164,8 +163,7 @@ rumpuser_getfileinfo(const char *path, uint64_t *sizep, int *ftp)
 			size = off;
 			goto out;
 		}
-		fprintf(stderr, "error: device size query not implemented on "
-		    "this platform\n");
+		printk("Device size query not implemented on this platform\n");
 		rv = EOPNOTSUPP;
 		goto out;
 #else
@@ -224,8 +222,7 @@ rumpuser_malloc(size_t howmuch, int alignment, void **memp)
 	rv = posix_memalign(&mem, (size_t)alignment, howmuch);
 	if (__predict_false(rv != 0)) {
 		if (rv == EINVAL) {
-			printf("rumpuser_malloc: invalid alignment %d\n",
-			    alignment);
+			printk("rumpuser_malloc: invalid alignment\n");
 			abort();
 		}
 	}
@@ -252,8 +249,7 @@ rumpuser_anonmmap(void *prefaddr, size_t size, int alignbit,
 #ifndef MAP_ALIGNED
 #define MAP_ALIGNED(a) 0
 	if (alignbit)
-		fprintf(stderr, "rumpuser_anonmmap: warning, requested "
-		    "alignment not supported by hypervisor\n");
+		printk("rumpuser_anonmmap: requested alignment unsupported\n");
 #endif
 
 	prot = PROT_READ|PROT_WRITE;
@@ -493,9 +489,10 @@ int
 rumpuser_getparam(const char *name, void *buf, size_t blen)
 {
 	int rv;
+	const char *ncpu = "1";
 
 	if (strcmp(name, RUMPUSER_PARAM_NCPU) == 0) {
-		sprintf(buf, "1");
+		strncpy(buf, ncpu, blen);
 		rv = 0;
 	} else if (strcmp(name, RUMPUSER_PARAM_HOSTNAME) == 0) {
 		char tmp[MAXHOSTNAMELEN];
