@@ -1,6 +1,6 @@
 INCLUDE=-Ilibrumpfiber -I./rump/include/ -I./buildrump.sh/src/tools/compat
 WARN=-Wall -Wstrict-prototypes -Wmissing-prototypes -Wpointer-arith -Wno-sign-compare -Wa,--fatal-warnings -Wreturn-type -Wswitch -Wshadow -Wcast-qual -Wwrite-strings -Wextra -Wno-unused-parameter -Wno-sign-compare -Wold-style-definition -Wsign-compare -Wformat=2 -Wno-format-zero-length -Werror
-CFLAGS=${INCLUDE} -O2 -g -fPIC -std=gnu99 ${WARN} -DLIBRUMPUSER -D_REENTRANT  -c -DGPROF -DPROF
+CFLAGS+=${INCLUDE} -O2 -g -std=gnu99 ${WARN} -DLIBRUMPUSER
 SRCDIR=./librumpfiber
 SOURCES=rumpfiber.c rumpfiber_thread.c rumpfiber_synch.c rumpfiber_stubs.c rumpuser_component.c rumpuser_dl.c rumpuser_errtrans.c rumpuser_daemonize.c rumpuser_sigtrans.c
 OBJECTS=$(SOURCES:%.c=obj/%.o)
@@ -33,11 +33,11 @@ ${RUMPLIBS}:	${BUILDRUMP}
 
 obj/%.o:	${SRCDIR}/%.c ${RUMPLIBS}
 		mkdir -p obj
-		${CC} $< ${CFLAGS} -o $@
+		${CC} -c $< ${CFLAGS} -o $@
 
 obj/%.pico:	${SRCDIR}/%.c ${RUMPLIBS}
 		mkdir -p obj
-		${CC} $< ${CFLAGS} -fPIC -o $@
+		${CC} -c $< ${CFLAGS} -fPIC -o $@
 
 ${DOTA}:	${OBJECTS} ${RUMPLIBS} cleana
 		${AR} rc $@ ${OBJECTS}
@@ -48,7 +48,7 @@ ${PICA}:	${PICOBJECTS} ${RUMPLIBS} cleana
 		ranlib $@
 
 ${SHLIBDIR}:	${PICA}
-		${CC} -Wl,-x -shared -Wl,-soname,${SONAME} -Wl,--warn-shared-textrel -o ${SHLIBDIR} -Wl,--whole-archive ${PICA} -Wl,--no-whole-archive ${SOLIBS}
+		${CC} ${LDFLAGS} -Wl,-x -shared -Wl,-soname,${SONAME} -Wl,--warn-shared-textrel -o ${SHLIBDIR} -Wl,--whole-archive ${PICA} -Wl,--no-whole-archive ${SOLIBS}
 		rm -f rump/lib/${SYM1} rump/lib/${SYM2}
 		ln -s ${SHLIB} rump/lib/${SYM1}
 		ln -s ${SHLIB} rump/lib/${SYM2}
