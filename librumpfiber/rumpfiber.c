@@ -147,7 +147,6 @@ create_thread(const char *name, void *cookie, void (*f)(void *), void *data,
 	void *stack, size_t stack_size)
 {
 	struct thread *thread = calloc(1, sizeof(struct thread));
-	char *namea = strdup(name);
 
 	if (!stack) {
 		assert(stack_size == 0);
@@ -163,7 +162,7 @@ create_thread(const char *name, void *cookie, void (*f)(void *), void *data,
 	create_ctx(&thread->ctx, stack, stack_size);
 	makecontext(&thread->ctx, (void (*)(void))f, 1, data);
 	
-	thread->name = namea;
+	thread->name = strdup(name);
 	thread->cookie = cookie;
 
 	/* Not runnable, not exited, not sleeping */
