@@ -2,12 +2,10 @@
 #include <stdint.h>
 #include <ucontext.h>
 #include <time.h>
-#include <unistd.h>
-#include <string.h>
 
 #include "queue.h"
 
-#define printk(s) (void)write(2, s, strlen(s))
+void printk(const char *s);
 
 struct thread {
     char *name;

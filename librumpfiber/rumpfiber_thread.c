@@ -66,11 +66,11 @@
 #include <stddef.h>
 #include <sys/mman.h>
 #include <time.h>
-#include <stdio.h>
 #include <string.h>
 #include <errno.h>
 #include <ucontext.h>
 #include <assert.h>
+#include <unistd.h>
 
 #include "rumpfiber_thread.h"
 
@@ -85,6 +85,14 @@ clock_nanosleep(clockid_t clock_id, int flags,
 	return nanosleep(request, remain);
 }
 #endif
+
+void
+printk(const char *msg)
+{
+	int ret __attribute__((unused));
+
+	ret = write(2, msg, strlen(msg));
+}
 
 TAILQ_HEAD(thread_list, thread);
 
