@@ -2,10 +2,20 @@
 #include <stdint.h>
 #include <ucontext.h>
 #include <time.h>
+#include <unistd.h>
+#include <string.h>
 
 #include "queue.h"
 
-void printk(const char *s);
+static void printk(const char *s);
+
+static void
+printk(const char *msg)
+{
+	int ret __attribute__((unused));
+
+	ret = write(2, msg, strlen(msg));
+}
 
 struct thread {
     char *name;
@@ -18,7 +28,6 @@ struct thread {
     int threrrno;
 };
 
-extern struct thread *idle_thread;
 void idle_thread_fn(void *unused);
 
 int is_runnable(struct thread *);
@@ -68,8 +77,17 @@ int abssleep_real(uint64_t millisecs);
 #define HAVE_CLOCK_NANOSLEEP
 #endif
 
+/* compatibility */
 #ifndef HAVE_CLOCK_NANOSLEEP
-int clock_nanosleep(clockid_t clock_id, int flags,
+static int clock_nanosleep(clockid_t clock_id, int flags,
 	const struct timespec *request, struct timespec *remain);
+static int
+clock_nanosleep(clockid_t clock_id, int flags,
+	const struct timespec *request, struct timespec *remain)
+{
+
+	assert(flags == 0);
+	return nanosleep(request, remain);
+}
 #endif
 
