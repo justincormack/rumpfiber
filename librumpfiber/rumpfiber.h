@@ -42,26 +42,7 @@ void clear_runnable(struct thread *);
 
 #define STACKSIZE 65536
 
-void init_sched(void);
-void set_sched_hook(void (*f)(void *, void *));
-struct thread *init_mainthread(void *);
-void run_idle_thread(void);
-struct thread* create_thread(const char *name, void *cookie,
-			     void (*f)(void *), void *data,
-			     void *stack, size_t stack_size);
-void exit_thread(void) __attribute__((noreturn));
-void join_thread(struct thread *);
-void schedule(void);
-void switch_threads(struct thread *prev, struct thread *next);
-void run_idle_thread(void);
-struct thread *get_current(void);
-int64_t now(void);
-void setcurrentthread(const char *name);
-void wake(struct thread *thread);
-void block(struct thread *thread);
-void msleep(uint64_t millisecs);
-void abssleep(uint64_t millisecs);
-int abssleep_real(uint64_t millisecs);
+
 
 /* compatibility, replace with some sort of configure system */
 
