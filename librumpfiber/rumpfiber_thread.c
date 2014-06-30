@@ -217,7 +217,7 @@ switch_threads(struct thread *prev, struct thread *next)
 		scheduler_hook(prev->cookie, next->cookie);
 	ret = swapcontext(&prev->ctx, &next->ctx);
 	if (ret < 0) {
-		printk("swapcontext failed: %s\n", strerror(errno));
+		printk("swapcontext failed\n");
 		abort();
 	}
 }
