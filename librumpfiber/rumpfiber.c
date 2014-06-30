@@ -75,7 +75,6 @@ static void msleep(uint64_t millisecs);
 static void abssleep(uint64_t millisecs);
 static void idle_thread_fn(void *unused);
 
-
 TAILQ_HEAD(thread_list, thread);
 
 static struct thread_list exited_threads = TAILQ_HEAD_INITIALIZER(exited_threads);
@@ -259,7 +258,7 @@ join_thread(struct thread *joinable)
 	struct join_waiter jw;
 	struct thread *thread = get_current();
 
-	//ASSERT(joinable->flags & THREAD_MUSTJOIN); /* XXX make sure defined assert */
+	assert(joinable->flags & THREAD_MUSTJOIN);
 
 	/* wait for exiting thread to hit thread_exit() */
 	while (! (joinable->flags & THREAD_JOINED)) {
