@@ -70,7 +70,6 @@ static void join_thread(struct thread *);
 static void switch_threads(struct thread *prev, struct thread *next);
 static struct thread *get_current(void);
 static int64_t now(void);
-static void setcurrentthread(const char *name);
 static void msleep(uint64_t millisecs);
 static void abssleep(uint64_t millisecs);
 
@@ -347,25 +346,18 @@ void clear_runnable(struct thread *thread)
 }
 
 static void
-setcurrentthread(const char *name)
+init_sched(void)
 {
 	struct thread *thread = calloc(1, sizeof(struct thread));
-	char *namea = strdup(name);
 
 	getcontext(&thread->ctx);
-	thread->name = namea;
+	thread->name = strdup("init");
 	thread->flags = 0;
 	thread->wakeup_time = -1;
 	thread->lwp = NULL;
 	set_runnable(thread);
 	TAILQ_INSERT_TAIL(&thread_list, thread, thread_list);
 	current_thread = thread;
-}
-
-static void
-init_sched(void)
-{
-
 }
 
 void
@@ -414,7 +406,6 @@ rumpuser_init(int version, const struct rumpuser_hyperup *hyp)
         rumpuser__hyp = *hyp;
 
 	init_sched();
-	setcurrentthread("init");
 
         return 0;
 }
