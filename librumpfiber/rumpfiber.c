@@ -66,24 +66,14 @@
 #include "rumpfiber.h"
 
 static void init_sched(void);
-void set_sched_hook(void (*f)(void *, void *));
-struct thread *init_mainthread(void *);
-struct thread* create_thread(const char *name, void *cookie,
-			     void (*f)(void *), void *data,
-			     void *stack, size_t stack_size);
-static void exit_thread(void) __attribute__((noreturn));
 static void join_thread(struct thread *);
-void schedule(void);
-void switch_threads(struct thread *prev, struct thread *next);
-struct thread *get_current(void);
-int64_t now(void);
+static void switch_threads(struct thread *prev, struct thread *next);
+static struct thread *get_current(void);
+static int64_t now(void);
 static void setcurrentthread(const char *name);
-void wake(struct thread *thread);
-void block(struct thread *thread);
-void msleep(uint64_t millisecs);
-void abssleep(uint64_t millisecs);
-int abssleep_real(uint64_t millisecs);
-
+static void msleep(uint64_t millisecs);
+static void abssleep(uint64_t millisecs);
+static void idle_thread_fn(void *unused);
 
 
 TAILQ_HEAD(thread_list, thread);
@@ -95,14 +85,14 @@ static struct thread *idle_thread = NULL;
 
 static void (*scheduler_hook)(void *, void *);
 
-struct thread *
+static struct thread *
 get_current(void)
 {
 
 	return current_thread;
 }
 
-int64_t
+static int64_t
 now(void)
 {
 	struct timespec ts;
@@ -207,7 +197,7 @@ create_thread(const char *name, void *cookie, void (*f)(void *), void *data,
 	return thread;
 }
 
-void
+static void
 switch_threads(struct thread *prev, struct thread *next)
 {
 	int ret;
@@ -229,7 +219,7 @@ struct join_waiter {
 };
 static TAILQ_HEAD(, join_waiter) joinwq = TAILQ_HEAD_INITIALIZER(joinwq);
 
-static void
+void
 exit_thread(void)
 {
 	struct thread *thread = get_current();
@@ -289,7 +279,7 @@ join_thread(struct thread *joinable)
 	wake(joinable);
 }
 
-void msleep(uint64_t millisecs)
+static void msleep(uint64_t millisecs)
 {
 	struct thread *thread = get_current();
 
@@ -298,7 +288,7 @@ void msleep(uint64_t millisecs)
 	schedule();
 }
 
-void abssleep(uint64_t millisecs)
+static void abssleep(uint64_t millisecs)
 {
 	struct thread *thread = get_current();
 
@@ -341,7 +331,7 @@ void block(struct thread *thread)
 	clear_runnable(thread);
 }
 
-void idle_thread_fn(void *unused)
+static void idle_thread_fn(void *unused)
 {
 
 	while (1) {
