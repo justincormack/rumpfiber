@@ -65,6 +65,10 @@
 
 #include "rumpuser_port.h"
 
+#if !defined(lint)
+__RCSID("$NetBSD$");
+#endif /* !lint */
+
 #include <sys/ioctl.h>
 #include <sys/mman.h>
 #include <sys/time.h>

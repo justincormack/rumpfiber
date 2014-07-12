@@ -3,6 +3,6 @@ librumpfiber [![Build Status](https://travis-ci.org/rumpkernel/rumpfiber.png?bra
 
 A [rump kernel](http://rumpkernel.org) hypercall library based on fibers (userspace threads, using swapcontext) rather than pthreads.
 
-To build just type `make`, or `gmake` on a BSD system as it requires GNU `make`.
+This repository is obsolete, the code is now merged into the standard Posix hypercall implementation upstream in NetBSD as an option.
 
-For further details see [the rumpfiber wiki page](http://wiki.rumpkernel.org/Repo:-rumpfiber).
+To build this option use `./buildrump.sh -V RUMPUSER_THREADS=fiber -V RUMP_CURLWP=hypercall` using the [buildrump.sh](http://repo.rumpkernel.org/buildrump.sh) repository.
